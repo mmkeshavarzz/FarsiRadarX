@@ -1,0 +1,32 @@
+name: X Stealth Hunter 🔥
+
+on:
+  schedule:
+    # ساعت‌های: 00, 03, 06, 09, 12, 15, 18, 21 به وقت تهران
+    - cron: '30 2,5,8,11,14,17,20,23 * * *'
+  workflow_dispatch:
+
+jobs:
+  stealth-hunt:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository 🛎️
+        uses: actions/checkout@v3
+
+      - name: Set up Python 🐍
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies 📦
+        # نصب مرورگر مخفی Playwright
+        run: |
+          pip install playwright
+          playwright install chromium
+
+      - name: Run Stealth Scraper 👾
+        env:
+          X_AUTH_TOKEN: ${{ secrets.X_AUTH_TOKEN }}
+        run: |
+          python scraper.py
