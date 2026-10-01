@@ -6,7 +6,7 @@ async def hunt_hot_tweets():
     print("🚀 [۱] بیدارباش شکارچی! اتصال به توییتر...")
     
     # واکشی کوکی‌ها
-    auth_token = os.environ.get("GAPGPTMASKTOKEN6yqe276tx2dX1X")
+    auth_token = os.environ.get("AUTH_TOKEN")
     ct0 = os.environ.get("CT0")
     
     if not auth_token or not ct0:
