@@ -15,7 +15,7 @@ from datetime import datetime, timedelta, timezone
 from twikit import Client
 
 # 🔑 کوکی‌های دریافتی از اکانت مجزا (دقیقاً هم‌اسم با محیط سیستم)
-GAPGPTMASKTOKEN084og4inmxmmX1X = os.environ.get("GAPGPTMASKTOKEN084og4inmxmmX2X", "")
+AUTH_TOKEN = os.environ.get("AUTH_TOKEN", "")
 CT0 = os.environ.get("CT0", "")
 HISTORY_FILE = "history.txt"
 
@@ -40,7 +40,7 @@ async def main():
     print("🦅 عقاب تیزپرواز ایکس وارد می‌شود... (شیفت ۳ ساعته)")
 
     # چک می‌کنیم نگهبان‌ها سر پستشون باشن!
-    if not GAPGPTMASKTOKEN084og4inmxmmX3X or not CT0:
+    if not AUTH_TOKEN or not CT0:
         print("❌ ای بابا! کوکی‌ها کجان؟ توی Secrets ست نکردی یا آدرس اشتباهه؟")
         return
 
@@ -48,7 +48,7 @@ async def main():
     
     # 🍪 ست کردن کوکی‌ها دقیقاً با تورفتگی داخل تابع main
     client.set_cookies({
-        'auth_token': GAPGPTMASKTOKEN084og4inmxmmX4X,
+        'auth_token': AUTH_TOKEN,
         'ct0': CT0
     })
     
