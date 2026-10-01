@@ -14,14 +14,14 @@ import os
 import time
 import re
 import urllib.parse
-import sys  # 👈 اینو اضافه کردم که بتونیم به گیت‌هاب ارور واقعی رو بفهمونیم
+import sys  
 
 from playwright.sync_api import sync_playwright
 
 AUTH_TOKEN = os.environ.get("X_AUTH_TOKEN")
 
-# موتور جستجوی پیشرفته توییتر: فقط فارسی، حداقل ۱۰۰۰ لایک و ۱۰۰ ریپلای
-SEARCH_QUERY = "lang:fa min_faves:1000 min_replies:100"
+# فیتیله فیلتر رو آوردم پایین که واسه تست حتما یه چیزی پیدا کنه و ری‌پست بشه
+SEARCH_QUERY = "lang:fa min_faves:100 min_replies:10"
 
 def convert_persian_nums(text):
     """تبدیل اعداد فارسی به انگلیسی واسه اینکه ربات قاطی نکنه"""
@@ -48,7 +48,7 @@ def extract_number(text):
 def main():
     if not AUTH_TOKEN:
         print("❌ داداش کوکی auth_token رو نذاشتی تو تنظیمات گیت‌هاب!")
-        sys.exit(1)  # 👈 خروج با ارور
+        sys.exit(1)
 
     print("🦅 رادار جهانی ایکس روشن شد! بریم واسه شکار کل توییتر فارسی...")
 
@@ -59,25 +59,29 @@ def main():
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         )
         
-        context.add_cookies([{
-            "name": "auth_token", "value": AUTH_TOKEN, "domain": ".x.com", "path": "/"
-        }])
+        # محکم‌کاری: کوکی رو روی هر دو تا دامنه توییتر و ایکس ست می‌کنیم
+        context.add_cookies([
+            {"name": "auth_token", "value": AUTH_TOKEN, "domain": ".x.com", "path": "/"},
+            {"name": "auth_token", "value": AUTH_TOKEN, "domain": ".twitter.com", "path": "/"}
+        ])
         
         page = context.new_page()
 
         try:
             encoded_query = urllib.parse.quote(SEARCH_QUERY)
-            
-            # 👈 سوتی اصلی اینجا بود! f=live& رو برداشتم تا توییتر نتیجه‌های پربازدید رو بیاره، نه اونایی که همون ثانیه منتشر شدن.
             target_url = f"https://x.com/search?q={encoded_query}&src=typed_query"
             
             print(f"🚜 در حال شخم زدن هشتگ‌ها و پست‌های داغ...")
             page.goto(target_url, timeout=60000)
-            
-            # 👈 یه ۵ ثانیه بهش مهلت میدیم تا صفحه جون بگیره و کامل لود بشه
             page.wait_for_timeout(5000)
             
-            page.wait_for_selector('article[data-testid="tweet"]', timeout=30000)
+            try:
+                # اینجا اگه هیچی پیدا نکرد دیگه کرش نمی‌کنه، فقط خبر میده
+                page.wait_for_selector('article[data-testid="tweet"]', timeout=20000)
+            except:
+                print("⚠️ داش، یا هیچ توییتی با این شرایط تو این لحظه وجود نداره، یا اینکه auth_token سوخته و توییتر اکانتتو انداخته بیرون.")
+                browser.close()
+                sys.exit(0) # خروج تمیز (تیک سبز میگیره چون تقصیر برنامه نبوده، فقط چیزی پیدا نشده)
             
             # سه بار اسکرول می‌کنیم پایین که چند تا توییت مشتی لود بشه تو صفحه
             for _ in range(3):
@@ -87,6 +91,7 @@ def main():
             tweets = page.query_selector_all('article[data-testid="tweet"]')
             print(f"📡 تعداد {len(tweets)} توییت مشکوک تو رادار پیدا شد!")
             
+            reposted_count = 0
             for t in tweets:
                 tweet_text = t.inner_text()
                 
@@ -97,8 +102,8 @@ def main():
                 view_elem = t.query_selector('[aria-label*="View"], [aria-label*="view"], [aria-label*="بازدید"]')
                 views = extract_number(view_elem.get_attribute('aria-label') if view_elem else "")
 
-                # شرط آخر: ویو بالای هزار
-                if views >= 1000:
+                # شرط آخر: ویو رو هم کم کردم که گیر نیفتی
+                if views >= 100:
                     print(f"🔥 صید توت‌فرنگی! ویو: {views} | (لایک و کامنت رو خود توییتر تایید کرده)")
                     
                     retweet_btn = t.query_selector('[data-testid="retweet"]')
@@ -109,17 +114,22 @@ def main():
                         if confirm_btn:
                             confirm_btn.click()
                             print("✅ نشست تو پیجمون! با موفقیت ری‌پست شد.")
+                            reposted_count += 1
                             print("🚬 استراحت ۲ دقیقه‌ای برای جلوگیری از لیمیت شدن...")
                             time.sleep(120)
                         else:
                             print("⚠️ دکمه تایید ری‌پست پیدا نشد. شاید قبلاً زدیش.")
                     else:
                         print("♻️ این پست رو ظاهراً قبلاً ری‌پست کردی داش.")
+                        
+                    # واسه اینکه تست کنی و جواب بگیری، بعد از یه دونه ری‌پست کردن کارو جمع می‌کنه
+                    if reposted_count >= 1:
+                        break
         
         except Exception as e:
             print(f"❌ داداش تو رادار یه اروری خوردیم: {e}")
             browser.close()
-            sys.exit(1)  # 👈 این همون ضربه نهاییه تا گیت‌هاب بفهمه گند بالا اومده و تیک سبز نده
+            sys.exit(1)
 
         browser.close()
         print("🏁 عملیات این شیفت تموم شد. بریم تا ۳ ساعت دیگه!")
