@@ -14,9 +14,9 @@ import asyncio
 from datetime import datetime, timedelta, timezone
 from twikit import Client
 
-# 🔑 کوکی‌های دریافتی از اکانت مجزا
-GAPGPTMASKTOKEN5km06nrboyeX0X = os.environ.get("TWITTER_secret-77d5d919", "")
-CT0 = os.environ.get("TWITTER_CT0", "")
+# 🔑 کوکی‌های دریافتی از اکانت مجزا (دقیقاً هم‌اسم با محیط سیستم)
+AUTH_TOKEN = os.environ.get("AUTH_TOKEN", "")
+CT0 = os.environ.get("CT0", "")
 HISTORY_FILE = "history.txt"
 
 # 🎯 فیلترهای شکار
@@ -39,12 +39,14 @@ def save_history(tweet_id):
 async def main():
     print("🦅 عقاب تیزپرواز ایکس وارد می‌شود... (شیفت ۳ ساعته)")
 
-    if not GAPGPTMASKTOKEN5km06nrboyeX1X or not CT0:
-        print("❌ ای بابا! کوکی‌ها کجان؟ توی Secrets ست نکردی؟")
+    # چک می‌کنیم نگهبان‌ها سر پستشون باشن!
+    if not AUTH_TOKEN or not CT0:
+        print("❌ ای بابا! کوکی‌ها کجان؟ توی Secrets ست نکردی یا آدرس اشتباهه؟")
         return
 
     client = Client(language='fa')
-    client.set_cookies(auth_token=GAPGPTMASKTOKEN5km06nrboyeX2X, ct0=CT0)
+    # اینجا هم اسم‌های درست رو به کلاینت پاس می‌دیم
+    client.set_cookies(auth_token=AUTH_TOKEN, ct0=CT0)
     
     history = load_history()
     print(f"📚 تعداد {len(history)} توییت قبلاً شکار شده و تو حافظه‌ست.")
