@@ -15,10 +15,10 @@ jobs:
 
     steps:
       - name: Checkout Code 🛎️
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python 🐍
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -28,9 +28,9 @@ jobs:
 
       - name: Execute Hunter 👾
         env:
-          # اینجا دقیقاً اسم سکرت‌هایی که تو تنظیمات گیت‌هاب ساختی رو می‌خونیم
           AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
           CT0: ${{ secrets.CT0 }}
+          TWID: ${{ secrets.TWID }}
         run: |
           python scraper.py
 
@@ -38,9 +38,11 @@ jobs:
         run: |
           git config --global user.name "Hunter Bot"
           git config --global user.email "bot@hunter.local"
-          # اگه فایل ساخته شده بود یا تغییری کرده بود، پوشش کن!
-          if [ -f history.txt ]; then
+          # فقط اگه تاریخچه دست خورده بود کمیت و پوش کن
+          if [ -n "$(git status --porcelain history.txt)" ]; then
             git add history.txt
-            git commit -m "🤖 Update repost history" || echo "No new posts to commit"
+            git commit -m "🤖 Update repost history"
             git push
+          else
+            echo "چیز جدیدی شکار نشد، نیازی به ثبت توی گیت نیست!"
           fi
