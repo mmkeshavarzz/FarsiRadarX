@@ -46,7 +46,10 @@ async def main():
 
     client = Client(language='fa')
     # اینجا هم اسم‌های درست رو به کلاینت پاس می‌دیم
-    client.set_cookies(auth_token=AUTH_TOKEN, ct0=CT0)
+client.set_cookies({
+    'auth_token': GAPGPTMASKTOKENhh5wuh9cgqbX1X,
+    'ct0': CT0
+})
     
     history = load_history()
     print(f"📚 تعداد {len(history)} توییت قبلاً شکار شده و تو حافظه‌ست.")
