@@ -47,7 +47,7 @@ async def main():
     client = Client(language='fa')
     # اینجا هم اسم‌های درست رو به کلاینت پاس می‌دیم
 client.set_cookies({
-    'auth_token': GAPGPTMASKTOKENhh5wuh9cgqbX1X,
+    'auth_token': AUTH_TOKEN,
     'ct0': CT0
 })
     
