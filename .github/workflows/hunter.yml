@@ -24,7 +24,7 @@ jobs:
 
       - name: Install twikit 📦
         run: |
-          pip install git+https://github.com/dper217/twikit.git
+          pip install https://github.com/dper217/twikit/archive/refs/heads/main.zip
           
       - name: Execute Hunter 👾
         env:
