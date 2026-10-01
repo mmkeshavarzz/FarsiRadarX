@@ -14,12 +14,13 @@ import os
 import time
 import re
 import urllib.parse
+import sys  # 👈 اینو اضافه کردم که بتونیم به گیت‌هاب ارور واقعی رو بفهمونیم
+
 from playwright.sync_api import sync_playwright
 
 AUTH_TOKEN = os.environ.get("X_AUTH_TOKEN")
 
 # موتور جستجوی پیشرفته توییتر: فقط فارسی، حداقل ۱۰۰۰ لایک و ۱۰۰ ریپلای
-# (فیلتر ویو رو ربات خودش تو صفحه چک می‌کنه چون توییتر هنوز اپراتور رسمی واسه سرچ ویو نداره)
 SEARCH_QUERY = "lang:fa min_faves:1000 min_replies:100"
 
 def convert_persian_nums(text):
@@ -47,7 +48,7 @@ def extract_number(text):
 def main():
     if not AUTH_TOKEN:
         print("❌ داداش کوکی auth_token رو نذاشتی تو تنظیمات گیت‌هاب!")
-        return
+        sys.exit(1)  # 👈 خروج با ارور
 
     print("🦅 رادار جهانی ایکس روشن شد! بریم واسه شکار کل توییتر فارسی...")
 
@@ -65,13 +66,17 @@ def main():
         page = context.new_page()
 
         try:
-            # تبدیل کوئری سرچ به فرمت لینک
             encoded_query = urllib.parse.quote(SEARCH_QUERY)
-            # f=live یعنی به ترتیب جدیدترین‌ها (اگر خواستی فقط تاپ‌ها رو ببینی، &f=live رو از تهش پاک کن)
-            target_url = f"https://x.com/search?q={encoded_query}&src=typed_query&f=live"
+            
+            # 👈 سوتی اصلی اینجا بود! f=live& رو برداشتم تا توییتر نتیجه‌های پربازدید رو بیاره، نه اونایی که همون ثانیه منتشر شدن.
+            target_url = f"https://x.com/search?q={encoded_query}&src=typed_query"
             
             print(f"🚜 در حال شخم زدن هشتگ‌ها و پست‌های داغ...")
             page.goto(target_url, timeout=60000)
+            
+            # 👈 یه ۵ ثانیه بهش مهلت میدیم تا صفحه جون بگیره و کامل لود بشه
+            page.wait_for_timeout(5000)
+            
             page.wait_for_selector('article[data-testid="tweet"]', timeout=30000)
             
             # سه بار اسکرول می‌کنیم پایین که چند تا توییت مشتی لود بشه تو صفحه
@@ -89,7 +94,6 @@ def main():
                 if not re.search(r'[\u0600-\u06FF]', tweet_text):
                     continue
 
-                # چون خود توییتر لایک و کامنت رو فیلتر کرده، ما اینجا فقط ویو رو می‌کشیم بیرون چک می‌کنیم
                 view_elem = t.query_selector('[aria-label*="View"], [aria-label*="view"], [aria-label*="بازدید"]')
                 views = extract_number(view_elem.get_attribute('aria-label') if view_elem else "")
 
@@ -114,6 +118,8 @@ def main():
         
         except Exception as e:
             print(f"❌ داداش تو رادار یه اروری خوردیم: {e}")
+            browser.close()
+            sys.exit(1)  # 👈 این همون ضربه نهاییه تا گیت‌هاب بفهمه گند بالا اومده و تیک سبز نده
 
         browser.close()
         print("🏁 عملیات این شیفت تموم شد. بریم تا ۳ ساعت دیگه!")
