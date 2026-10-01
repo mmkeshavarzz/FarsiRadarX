@@ -5,11 +5,10 @@ from twikit import Client
 async def hunt_hot_tweets():
     print("🚀 [۱] بیدارباش شکارچی! اتصال به توییتر...")
     
-    # واکشی کوکی‌ها
     auth_token = os.environ.get("AUTH_TOKEN")
     ct0 = os.environ.get("CT0")
+    twid = os.environ.get("TWID")  # کوکی کمکی واسه محکم‌کاری
 
-    # 🕵️‍♂️ کدهای دیباگ (طول رشته رو چاپ می‌کنیم تا توکن لو نره ولی بودنش تایید بشه):
     print(f"DEBUG: طول AUTH_TOKEN دریافتی = {len(auth_token) if auth_token else 'صفر یا هیچی (None)'}")
     print(f"DEBUG: طول CT0 دریافتی = {len(ct0) if ct0 else 'صفر یا هیچی (None)'}")
     
@@ -18,16 +17,21 @@ async def hunt_hot_tweets():
         return
 
     client = Client(language='en-US')
-    client.set_cookies({
+    
+    # تنظیم کوکی‌ها به صورت مشتی
+    cookies = {
         'auth_token': auth_token,
         'ct0': ct0
-    })
+    }
+    if twid:
+        cookies['twid'] = twid
 
-    query = "lang:fa min_faves:1000" # یا کوئری دقیق خودت
+    client.set_cookies(cookies)
+
+    query = "lang:fa min_faves:1000"
     print(f"🔎 [۲] جستجو با فرمول جادویی: '{query}'")
     
     try:
-        # جستجو در تب پرطرفدارترین‌ها (Top)
         tweets = await client.search_tweet(query, product='Top')
     except Exception as e:
         print(f"💥 عه! توییتر پا رو سیم انداخت: {e}")
@@ -43,23 +47,25 @@ async def hunt_hot_tweets():
     history = set()
     if os.path.exists("history.txt"):
         with open("history.txt", "r", encoding="utf-8") as f:
-            history = set(line.strip() for line in f)
+            history = set(line.strip() for line in f if line.strip())
 
     reposted_count = 0
     for tweet in tweets:
-        print(f"--- بررسی توییت {tweet.id}: لایک: {tweet.favorite_count} | کامنت: {tweet.reply_count} | ویو: {getattr(tweet, 'view_count', 'نامشخص')}")
+        tweet_id_str = str(tweet.id)
+        print(f"--- بررسی توییت {tweet_id_str}: لایک: {getattr(tweet, 'favorite_count', 0)} | کامنت: {getattr(tweet, 'reply_count', 0)}")
         
-        if tweet.id in history:
-            print(f"⏭️ توییت {tweet.id} تکراری بود، اسکیپ شد.")
+        if tweet_id_str in history:
+            print(f"⏭️ توییت {tweet_id_str} تکراری بود، اسکیپ شد.")
             continue
             
-        # اگر همه شروط پاس شد:
-        print(f"🔥 شکار شد! در حال ری‌پست کردن {tweet.id}...")
+        print(f"🔥 شکار شد! در حال ری‌پست کردن {tweet_id_str}...")
         try:
-            await tweet.retweet()
-            # ثبت در تاریخچه
+            # استفاده از متد مستقیم کلاینت واسه ری‌پست بی‌دردسر
+            await client.retweet(tweet.id)
+            
             with open("history.txt", "a", encoding="utf-8") as f:
-                f.write(f"{tweet.id}\n")
+                f.write(f"{tweet_id_str}\n")
+            
             print("✅ با موفقیت ری‌پست شد!")
             reposted_count += 1
             break # فقط یک شکار در هر اجرا
