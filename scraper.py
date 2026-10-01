@@ -1,87 +1,104 @@
 """
 =============================================================================
-*  Project: X Hot Posts Hunter 🔥 (COOKIE & USERBOT EDITION)
+*  Project: X Hot Posts Hunter 🔥 (3-HOUR SHIFT EDITION)
 *  Features:
-*    - 🍪 Zero API: بدون نیاز به کلید رسمی و دلارهای ایلان ماسک!
-*    - 🕒 Midnight Run: اجرای شبانه راس ساعت ۲۳:۵۹ تهران
-*    - 🎯 Strict Filter: حداقل ۱۰۰۰ لایک، ۱۰۰۰ ویو و ۱۰۰ کامنت فارسی
-*    - 🛑 Anti-Ban Shield: وقفه ۱۲۰ ثانیه‌ای بین هر ری‌پست
+*    - 🍪 Zero API: دور زدن محدودیت‌های توییتر!
+*    - 🕒 3-Hour Patrol: اجرای گشت هر ۳ ساعت یک‌بار
+*    - 🧠 Smart Memory: ثبت تاریخچه در history.txt برای جلوگیری از تکرار
+*    - ⏳ Time Filter: فقط و فقط توییت‌های ۳ ساعت اخیر!
 =============================================================================
 """
 
 import os
 import asyncio
+from datetime import datetime, timedelta, timezone
 from twikit import Client
 
 # 🔑 کوکی‌های دریافتی از اکانت مجزا
-AUTH_TOKEN = os.environ.get("TWITTER_AUTH_TOKEN", "")
+GAPGPTMASKTOKEN5km06nrboyeX0X = os.environ.get("TWITTER_secret-77d5d919", "")
 CT0 = os.environ.get("TWITTER_CT0", "")
+HISTORY_FILE = "history.txt"
 
 # 🎯 فیلترهای شکار
 MIN_LIKES = 1000
 MIN_VIEWS = 1000
 MIN_REPLIES = 100
 
-async def main():
-    print("🦉 جغد بیدار ایکس با هویت مخفی وارد می‌شود...")
+def load_history():
+    # باز کردن دفترچه خاطرات ربات 📖
+    if not os.path.exists(HISTORY_FILE):
+        return set()
+    with open(HISTORY_FILE, "r") as f:
+        return set(line.strip() for line in f)
 
-    if not AUTH_TOKEN or not CT0:
-        print("❌ کوکی‌های اکانت یافت نشد! auth_token و ct0 رو در Secrets ست کن.")
+def save_history(tweet_id):
+    # ثبت کردن اسم مجرم (آیدی توییت) تو لیست سیاه 🏴‍☠️
+    with open(HISTORY_FILE, "a") as f:
+        f.write(f"{tweet_id}\n")
+
+async def main():
+    print("🦅 عقاب تیزپرواز ایکس وارد می‌شود... (شیفت ۳ ساعته)")
+
+    if not GAPGPTMASKTOKEN5km06nrboyeX1X or not CT0:
+        print("❌ ای بابا! کوکی‌ها کجان؟ توی Secrets ست نکردی؟")
         return
 
-    # راه‌اندازی کلاینت با کوکی
     client = Client(language='fa')
-    client.set_cookies(
-        auth_token=AUTH_TOKEN,
-        ct0=CT0
-    )
+    client.set_cookies(auth_token=GAPGPTMASKTOKEN5km06nrboyeX2X, ct0=CT0)
+    
+    history = load_history()
+    print(f"📚 تعداد {len(history)} توییت قبلاً شکار شده و تو حافظه‌ست.")
 
+    # محاسبه دقیق زمان ۳ ساعت پیش (توییتر به وقت UTC کار می‌کنه)
+    three_hours_ago = datetime.now(timezone.utc) - timedelta(hours=3)
+    
+    search_query = f"lang:fa min_faves:{MIN_LIKES} min_replies:{MIN_REPLIES} -is:retweet"
+    print(f"🔍 در حال بو کشیدن تایم‌لاین...")
+    
     try:
-        # جستجوی توییت‌های پرطرفدار فارسی (حذف ری‌توییت‌ها)
-        # فرمول سرچ پیشرفته توییتر برای پست‌های داغ
-        search_query = f"lang:fa min_faves:{MIN_LIKES} min_replies:{MIN_REPLIES} -is:retweet"
-        print(f"🔍 در حال کاوش در تایم‌لاین با کوئری: {search_query}")
-        
         tweets = await client.search_tweet(search_query, product='Top')
-
+        
         if not tweets:
-            print("📭 امشب خبری نبوده! هیچ پستی از فیلترهای سنگین ما رد نشد.")
+            print("📭 تو این شیفت پرنده‌ای پر نزده! میریم تا ۳ ساعت دیگه.")
             return
 
-        print(f"🔥 تعداد {len(tweets)} توییت داغ پیدا شد! آماده‌سازی برای ری‌پست...")
-
-        for idx, tweet in enumerate(tweets):
+        repost_count = 0
+        for tweet in tweets:
+            # ۱. چک کردن حافظه (نکنه قبلاً ری‌پستش کرده باشیم؟) 🤔
+            if str(tweet.id) in history:
+                continue
+            
+            # ۲. بررسی تاریخ تولد توییت (فقط ۳ ساعت اخیر باشه) ⏳
             try:
-                # بررسی شرط ویو (در صورت در دسترس بودن متریک)
-                views = getattr(tweet, 'view_count', None) or 0
-                try:
-                    views = int(views)
-                except ValueError:
-                    views = 0
-
-                # فیلتر نهایی
-                if views < MIN_VIEWS and views != 0:
+                # تبدیل فرمت عجیب توییتر به فرمت قابل فهم برای پایتون
+                tweet_date = datetime.strptime(tweet.created_at, '%a %b %d %H:%M:%S +0000 %Y').replace(tzinfo=timezone.utc)
+                if tweet_date < three_hours_ago:
+                    print(f"تاریخ گذشته: توییت {tweet.id} بیات شده! اسکیپ شد ⏭️")
                     continue
-
-                print(f"\n🎯 در حال ری‌پست کردن توییت از: @{tweet.user.screen_name}")
-                print(f"❤️ لایک: {tweet.favorite_count} | 💬 کامنت: {tweet.reply_count} | 👁️ ویو: {views}")
-                
-                # ری‌پست کردن
-                await tweet.retweet()
-                print("✅ با موفقیت ری‌پست شد!")
-
-                # ترمز ضد بن (۲ دقیقه استراحت)
-                if idx < len(tweets) - 1:
-                    print("🛑 ترمز اضطراری فعال شد: ۲ دقیقه استراحت برای حفظ امنیت اکانت...")
-                    await asyncio.sleep(120)
-
             except Exception as e:
-                print(f"⚠️ خطا در ری‌پست این مورد: {e}")
+                print(f"⚠️ مشکل در خوندن تاریخ این توییت: {e}")
+                continue
 
+            # ۳. بررسی ویو (در صورت وجود) 👀
+            views = int(getattr(tweet, 'view_count', 0) or 0)
+            if views < MIN_VIEWS and views != 0:
+                continue
+
+            print(f"\n✅ شکار موفق! ری‌پست کردن: {tweet.id} از @{tweet.user.screen_name}")
+            try:
+                await tweet.retweet()
+                save_history(tweet.id)
+                repost_count += 1
+                
+                print("🛑 صبر تاکتیکی (۲ دقیقه) تا الگوریتم‌های توییتر بهمون شک نکنن...")
+                await asyncio.sleep(120)
+            except Exception as e:
+                print(f"⚠️ نشد که بشه (احتمالاً لیمیت شدیم یا پاک شده): {e}")
+
+        print(f"\n🏁 شیفت تموم شد! تو این دور {repost_count} تا پست جدید شکار کردیم.")
+            
     except Exception as e:
-        print(f"❌ خطای اساسی در ارتباط با ایکس: {e}")
-
-    print("\n🏁 ماموریت امشب به پایان رسید. خسته نباشی دلاور!")
+        print(f"❌ ای داد بر من! خطا خوردیم: {e}")
 
 if __name__ == "__main__":
     asyncio.run(main())
