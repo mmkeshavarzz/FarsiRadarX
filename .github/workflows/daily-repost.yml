@@ -1,10 +1,14 @@
-name: Daily X Hot Posts Hunter 🚀
+name: X Hot Posts Hunter 🚀
 
 on:
   schedule:
-    # راس ساعت 23:59 تهران (20:29 به وقت سرور گیت‌هاب UTC)
-    - cron: '29 20 * * *'
+    # هر ۳ ساعت یک‌بار اجرا میشه ⏰
+    - cron: '0 */3 * * *'
   workflow_dispatch:
+
+# ⚠️ این دسترسی به شدت مهمه! اجازه میده بات بتونه فایل تاریخچه رو ذخیره کنه
+permissions:
+  contents: write
 
 jobs:
   run-hunter:
@@ -25,7 +29,18 @@ jobs:
 
       - name: Execute Hunter 👾
         env:
-          TWITTER_AUTH_TOKEN: ${{ secrets.TWITTER_AUTH_TOKEN }}
+          TWITTER_secret-77d5d919: ${{ secrets.TWITTER_secret-77d5d919 }}
           TWITTER_CT0: ${{ secrets.TWITTER_CT0 }}
         run: |
           python scraper.py
+
+      - name: Commit History to Repo 💾
+        run: |
+          git config --global user.name "Hunter Bot"
+          git config --global user.email "bot@hunter.local"
+          # اگه فایل ساخته شده بود یا تغییری کرده بود، پوشش کن!
+          if [ -f history.txt ]; then
+            git add history.txt
+            git commit -m "🤖 Update repost history" || echo "No new posts to commit"
+            git push
+          fi
