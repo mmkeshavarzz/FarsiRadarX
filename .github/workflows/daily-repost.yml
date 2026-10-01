@@ -6,7 +6,6 @@ on:
     - cron: '0 */3 * * *'
   workflow_dispatch:
 
-# ⚠️ این دسترسی به شدت مهمه! اجازه میده بات بتونه فایل تاریخچه رو ذخیره کنه
 permissions:
   contents: write
 
@@ -29,8 +28,9 @@ jobs:
 
       - name: Execute Hunter 👾
         env:
-          TWITTER_secret-77d5d919: ${{ secrets.TWITTER_secret-77d5d919 }}
-          TWITTER_CT0: ${{ secrets.TWITTER_CT0 }}
+          # اینجا دقیقاً اسم سکرت‌هایی که تو تنظیمات گیت‌هاب ساختی رو می‌خونیم
+          AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
+          CT0: ${{ secrets.CT0 }}
         run: |
           python scraper.py
 
