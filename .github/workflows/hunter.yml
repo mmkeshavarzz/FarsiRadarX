@@ -24,8 +24,8 @@ jobs:
 
       - name: Install twikit 📦
         run: |
-          pip install twikit
-
+          pip install git+https://github.com/dper217/twikit.git
+          
       - name: Execute Hunter 👾
         env:
           AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
