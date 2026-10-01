@@ -8,6 +8,10 @@ async def hunt_hot_tweets():
     # واکشی کوکی‌ها
     auth_token = os.environ.get("AUTH_TOKEN")
     ct0 = os.environ.get("CT0")
+
+    # 🕵️‍♂️ کدهای دیباگ (طول رشته رو چاپ می‌کنیم تا توکن لو نره ولی بودنش تایید بشه):
+    print(f"DEBUG: طول AUTH_TOKEN دریافتی = {len(auth_token) if auth_token else 'صفر یا هیچی (None)'}")
+    print(f"DEBUG: طول CT0 دریافتی = {len(ct0) if ct0 else 'صفر یا هیچی (None)'}")
     
     if not auth_token or not ct0:
         print("❌ ای بابا! سکرت‌ها خالی هستند! گیت‌هاب چیزی تحویل نداد.")
